@@ -13,18 +13,35 @@ SELECT location, date, total_cases, new_cases, total_deaths, population
 FROM PortfolioProject..CovidDeaths
 ORDER BY 1, 2
 
---Percentage of Total Cases vs Total Deaths (Likelihood of You Dying if You got Covid)
+--Percentage of Total Cases vs Total Deaths 
 SELECT location, date, total_cases, total_deaths, 
 (CONVERT(float, total_deaths) / NULLIF(CONVERT(float, total_cases), 0))*100 AS deaths_percentage
 FROM PortfolioProject..CovidDeaths
 WHERE location LIKE '%Arabia'
 ORDER BY 1, 2
 
+--Percentage of Population that got Infected in each Country
+SELECT location, MAX(total_cases) AS HighestInfectionCount, population, MAX(total_cases/population)*100 AS PercentPopulationInfected
+FROM PortfolioProject..CovidDeaths
+GROUP BY location, population
+ORDER BY PercentPopulationInfected desc
+
+--Percentage of Population that got Infected in each Country per day
+SELECT location, MAX(total_cases) AS HighestInfectionCount, population, date, MAX(total_cases/population)*100 AS PercentPopulationInfected
+FROM PortfolioProject..CovidDeaths
+GROUP BY location, population, date
+ORDER BY location
+
 --Percentage of Total Cases vs Population (What Percentage of People got Covid)
 SELECT location, date, total_cases, population, (total_cases/population)*100 AS population_percentage 
 FROM PortfolioProject..CovidDeaths
 WHERE location LIKE '%Arabia'
 ORDER BY 1, 2
+
+--Global Death Percentage 
+SELECT SUM(new_cases) AS total_Cases, SUM(CAST(new_deaths AS int)) AS total_deaths, SUM(CAST(new_deaths AS int))/SUM(new_cases) * 100 AS DeathPercentage
+FROM PortfolioProject..CovidDeaths
+WHERE continent IS NOT NULL
 
 --Countries with Highest Infection Rate
 SELECT location, MAX(total_cases) AS highest_infection_count, population, MAX((total_cases/population))*100 AS infection_rate 
@@ -59,6 +76,12 @@ SELECT date, SUM(new_cases) AS 'total_cases', SUM(new_deaths) AS 'total_deaths',
 FROM PortfolioProject..CovidDeaths
 GROUP BY date
 ORDER BY 1, 2
+
+--Total Death Count in each Continent
+SELECT location, SUM(CAST(new_deaths AS int)) AS TotalDeathCount
+FROM PortfolioProject..CovidDeaths
+WHERE continent IS NULL AND location NOT IN ('World', 'European Union', 'International')
+GROUP BY location
 
 --Total Population vs Vaccination
 SELECT dea.location, dea.continent, dea.date, dea.population, vac.new_vaccinations,
